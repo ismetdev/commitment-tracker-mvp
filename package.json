@@ -1,0 +1,12 @@
+{
+  "name": "commitment-tracker",
+  "version": "1.0.0",
+  "description": "Local-only personal commitment, monthly snapshot, and debt tracker.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

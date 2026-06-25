@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commitment Tracker</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand">Commitment Tracker</h1>
+    <nav class="nav">
+      <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="monthly">Monthly</button>
+      <button class="nav-btn" data-view="commitments">Commitments</button>
+      <button class="nav-btn" data-view="debts">Debts</button>
+      <button class="nav-btn" data-view="history">History</button>
+      <button class="nav-btn" data-view="help">How to Use</button>
+    </nav>
+  </header>
+
+  <main class="content">
+    <!-- Each view is a section; JS toggles which one is visible. -->
+    <section class="view active" id="view-dashboard">
+      <h2>Dashboard</h2>
+      <div id="dash-content">
+        <div class="empty">Loading overview…</div>
+      </div>
+      <div id="health" class="muted small" style="margin-top:16px;"></div>
+    </section>
+
+    <section class="view" id="view-monthly">
+      <h2>Monthly</h2>
+      <p class="muted">Generate a month from your active commitments, then mark each line paid or pending.</p>
+
+      <div class="card">
+        <div class="form-row" style="max-width:none;">
+          <label for="m-picker">Month</label>
+          <div class="inline-controls">
+            <input type="month" id="m-picker" />
+            <button class="btn btn-primary" id="m-generate">Generate month</button>
+            <button class="btn" id="m-load">Load</button>
+          </div>
+        </div>
+        <div id="m-error" class="error-msg"></div>
+      </div>
+
+      <div id="m-summary"></div>
+      <div id="m-lines"></div>
+
+      <div class="card" id="m-adhoc-card" style="display:none;">
+        <h3 style="margin-top:0;font-size:15px;">Add a one-off line to this month</h3>
+        <p class="muted small">Only affects the selected month. Does not change your commitment templates.</p>
+        <div class="inline-controls">
+          <input type="text" id="m-adhoc-name" placeholder="e.g. Car repair" />
+          <input type="number" id="m-adhoc-amount" min="0" step="0.01" placeholder="Amount" />
+          <button class="btn btn-primary" id="m-adhoc-add">Add line</button>
+        </div>
+        <div id="m-adhoc-error" class="error-msg"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-commitments">
+      <h2>Commitments</h2>
+      <p class="muted">Recurring templates that future months are generated from.</p>
+
+      <form id="commitment-form" class="card form">
+        <input type="hidden" id="c-id" />
+        <div class="form-row">
+          <label for="c-name">Name</label>
+          <input type="text" id="c-name" placeholder="e.g. Rent, Gym, Netflix" required />
+        </div>
+        <div class="form-row">
+          <label for="c-type">Type</label>
+          <select id="c-type">
+            <option value="fixed">fixed</option>
+            <option value="variable">variable</option>
+            <option value="optional">optional</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="c-amount">Default amount</label>
+          <input type="number" id="c-amount" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="c-submit">Add commitment</button>
+          <button type="button" class="btn btn-ghost" id="c-cancel" style="display:none;">Cancel</button>
+        </div>
+        <div id="c-error" class="error-msg"></div>
+      </form>
+
+      <div id="commitment-list"></div>
+    </section>
+
+    <section class="view" id="view-debts">
+      <h2>Debts</h2>
+      <p class="muted">Light tracking for personal debts — balances and payments only.</p>
+
+      <form id="debt-form" class="card form">
+        <div class="inline-controls">
+          <div class="form-row" style="margin-bottom:0;">
+            <label for="d-name">Name</label>
+            <input type="text" id="d-name" placeholder="e.g. Mama, Friend loan" />
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label for="d-original">Original amount</label>
+            <input type="number" id="d-original" min="0" step="0.01" value="0" />
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label for="d-balance">Current balance <span class="muted small">(optional)</span></label>
+            <input type="number" id="d-balance" min="0" step="0.01" placeholder="= original" />
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label for="d-monthly">Monthly payment</label>
+            <input type="number" id="d-monthly" min="0" step="0.01" value="0" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="d-submit" style="align-self:flex-end;">Add debt</button>
+        </div>
+        <div id="d-error" class="error-msg"></div>
+      </form>
+
+      <div id="debt-list"></div>
+      <div id="debt-detail"></div>
+    </section>
+
+    <section class="view" id="view-history">
+      <h2>History</h2>
+      <p class="muted">Every generated month. Click one to open it in the Monthly view.</p>
+      <div id="history-content"></div>
+    </section>
+
+    <section class="view" id="view-help">
+      <h2>How to Use</h2>
+
+      <div class="card help-card">
+        <h3>What this is</h3>
+        <p>A private, local tool to track what you pay each month, keep month-by-month history, and pay down personal debts. All data stays on your computer.</p>
+      </div>
+
+      <div class="card help-card">
+        <h3>The basic flow</h3>
+        <ol>
+          <li><strong>Add commitments</strong> — your recurring monthly costs (rent, gym, subscriptions).</li>
+          <li><strong>Add debts</strong> — money you owe, with a monthly payment amount.</li>
+          <li><strong>Generate a month</strong> — creates that month from your active commitments and unpaid debts.</li>
+          <li><strong>Mark each line paid</strong> as you pay it. Paid vs pending totals update live.</li>
+        </ol>
+      </div>
+
+      <div class="card help-card">
+        <h3>Commitments</h3>
+        <ul>
+          <li>Types: <em>fixed</em> (same each month), <em>variable</em> (changes), <em>optional</em>.</li>
+          <li>Editing a commitment only affects <strong>future</strong> generated months. Past months never change.</li>
+          <li>Deactivate one to stop it appearing in new months (you can reactivate anytime).</li>
+        </ul>
+      </div>
+
+      <div class="card help-card">
+        <h3>Debts</h3>
+        <ul>
+          <li>Each debt has an <strong>original amount</strong>, a <strong>current balance</strong>, and a <strong>monthly payment</strong>.</li>
+          <li>If the monthly payment is more than 0, the debt appears as a line in each new month.</li>
+          <li><strong>Marking that debt line paid reduces the balance.</strong> Unmarking it puts the balance back.</li>
+          <li>The last payment is capped to what's left — you never overpay.</li>
+          <li>When a debt hits 0, it stops appearing in new months.</li>
+        </ul>
+      </div>
+
+      <div class="card help-card">
+        <h3>Partial &amp; extra payments</h3>
+        <ul>
+          <li><strong>Paid less than usual?</strong> Click the amount on the month line, change it, then mark it paid. The balance drops by that amount.</li>
+          <li><strong>Paid extra, off-schedule?</strong> Open the debt and use “Record an extra payment”.</li>
+        </ul>
+      </div>
+
+      <div class="card help-card">
+        <h3>Dashboard &amp; carry-forward</h3>
+        <ul>
+          <li>The dashboard shows your latest month, total owed, and expected monthly cost.</li>
+          <li>If an <strong>earlier</strong> month still has unpaid items, a yellow warning lists it. Click to open and settle it. Your newest month isn't flagged — that's the one you're working on.</li>
+        </ul>
+      </div>
+
+      <div class="card help-card">
+        <h3>Backups</h3>
+        <ul>
+          <li>On the Dashboard, <strong>Download backup (.sqlite)</strong> saves a full copy. Keep it somewhere safe.</li>
+          <li>To restore: stop the app, replace <code>data.sqlite</code> with your backup (renamed), restart.</li>
+          <li><strong>Export CSV</strong> gives a readable copy for Excel — for viewing, not restoring.</li>
+        </ul>
+      </div>
+
+      <div class="card help-card">
+        <h3>Months</h3>
+        <ul>
+          <li>A month can't be generated twice.</li>
+          <li><strong>Delete this month</strong> (in the Monthly view) removes a month so you can regenerate it. Any paid debt lines have their balances restored first, so nothing is lost.</li>
+        </ul>
+      </div>
+
+      <!-- Danger zone is injected here by the app. -->
+      <div id="help-danger"></div>
+    </section>
+  </main>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
